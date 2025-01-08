@@ -30,7 +30,8 @@
 #include <ctype.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <upnp/ithread.h>
+//#include <upnp/ithread.h>
+#include <pthread.h> // New
 
 #include "upnp_device.h"
 #include "xmlescape.h"
