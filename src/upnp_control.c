@@ -36,7 +36,8 @@
 #include <string.h>
 
 #include <upnp/upnp.h>
-#include <upnp/ithread.h>
+//#include <upnp/ithread.h>
+#include <pthread.h> // New
 
 #include "logging.h"
 #include "webserver.h"
