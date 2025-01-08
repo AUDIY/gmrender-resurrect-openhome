@@ -23,6 +23,8 @@ jobs:
         gstreamer1.0-alsa
     - name: version check
       run: automake --version
+    - name: Add Permission
+      run: sudo chmod 755 ./*
     - name: autogen
       run: ./autogen.sh
     - name: configure
