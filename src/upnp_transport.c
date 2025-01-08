@@ -37,7 +37,8 @@
 #include <glib.h>
 
 #include <upnp/upnp.h>
-#include <upnp/ithread.h>
+//#include <upnp/ithread.h>
+#include <pthread.h> // New
 
 #include "output.h"
 #include "upnp.h"
