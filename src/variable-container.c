@@ -48,9 +48,15 @@ static void *notification_thread_func(void * unused);
 
 void variable_container_init(void)
 {
-	ithread_mutex_init(&notify_mutex, NULL);
-	ithread_cond_init(&notify_cond, NULL);
-	ithread_create(&notify_thread, NULL, notification_thread_func, NULL);
+	//ithread_mutex_init(&notify_mutex, NULL);
+	pthread_mutex_init(&notify_mutex, NULL);
+	//ithread_cond_init(&notify_cond, NULL);
+	pthread_cond_init(&notify_cond, NULL);
+	//ithread_create(&notify_thread, NULL, notification_thread_func, NULL);
+#ifdef THREAD_NOTIFY
+	pthread_create(&notify_thread, NULL, notification_thread_func, NULL);
+#endif
+	
 }
 
 // -- VariableContainer
@@ -64,7 +70,8 @@ struct variable_container {
 	int variable_num;
 	struct var_meta *variable_meta;
 	char **values;
-	ithread_mutex_t mutex;
+	//ithread_mutex_t mutex;
+	pthread_mutex_t mutex; // New
 	struct cb_list *callbacks;
 };
 
@@ -83,7 +90,8 @@ variable_container_t *VariableContainer_new(int variable_num,
 					   ? variable_init_values[i]
 					   : "");
 	}
-	ithread_mutex_init(&result->mutex, NULL);
+	//ithread_mutex_init(&result->mutex, NULL);
+	pthread_mutex_init(&result->mutex, NULL); // New
 	return result;
 }
 
@@ -150,12 +158,14 @@ void VariableContainer_register_callback(variable_container_t *object,
 
 void VariableContainer_lock(variable_container_t *object)
 {
-	ithread_mutex_lock(&object->mutex);
+	//ithread_mutex_lock(&object->mutex);
+	pthread_mutex_lock(&object->mutex);
 }
 
 void VariableContainer_unlock(variable_container_t *object)
 {
-	ithread_mutex_unlock(&object->mutex);
+	//ithread_mutex_unlock(&object->mutex);
+	pthread_mutex_unlock(&object->mutex);
 }
 
 
@@ -385,35 +395,44 @@ static int UPnPVarChangeCollector_collect_lastchange(upnp_var_change_collector_t
 // TODO(hzeller): add rate limiting. The standard talks about some limited
 // amount of events per time-unit.
 static void UPnPVarChangeCollector_notify(upnp_var_change_collector_t *obj) {
-	ithread_mutex_lock(&notify_mutex);
+	//ithread_mutex_lock(&notify_mutex);
+	pthread_mutex_lock(&notify_mutex);
 	if (obj->open_transactions != 0) {
-		ithread_mutex_unlock(&notify_mutex);
+		//ithread_mutex_unlock(&notify_mutex);
+		pthread_mutex_unlock(&notify_mutex);
 		return;
 	}
 
 	if (obj->changed_variables) {
 		send_notifications = 1;
-		ithread_cond_signal(&notify_cond);
+		//ithread_cond_signal(&notify_cond);
+		pthread_cond_signal(&notify_cond);
 	}
-	ithread_mutex_unlock(&notify_mutex);
+	//ithread_mutex_unlock(&notify_mutex);
+	pthread_mutex_unlock(&notify_mutex);
 }
 
 static void *notification_thread_func(void * unused)
 {
 	for (;;) {
-		ithread_mutex_lock(&notify_mutex);
+		//ithread_mutex_lock(&notify_mutex);
+		pthread_mutex_lock(&notify_mutex);
 		// send_notifications could be set by other threads 
 		// while previous notifications were being sent.
 		// If that is true, do not wait for condition
-		if (!send_notifications)
-			ithread_cond_wait(&notify_cond, &notify_mutex);
+		if (!send_notifications) {
+			//ithread_cond_wait(&notify_cond, &notify_mutex);
+			pthread_cond_wait(&notify_cond, &notify_mutex);
+		}
 		// check for spurious wakeup
 		if (!send_notifications) {
-			ithread_mutex_unlock(&notify_mutex);
+			//ithread_mutex_unlock(&notify_mutex);
+			pthread_mutex_unlock(&notify_mutex);
 			continue;
 		}
 		send_notifications = 0;
-		ithread_mutex_unlock(&notify_mutex);
+		//ithread_mutex_unlock(&notify_mutex);
+		pthread_mutex_unlock(&notify_mutex);
 		upnp_var_change_collector_t *collector = collectors;
 		while (collector != NULL) {
 			VariableContainer_lock(collector->variable_container);
