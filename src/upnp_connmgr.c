@@ -32,7 +32,8 @@
 #include <string.h>
 
 #include <upnp/upnp.h>
-#include <upnp/ithread.h>
+//#include <upnp/ithread.h>
+#include <pthread.h> // New
 
 #include "upnp_connmgr.h"
 

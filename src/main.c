@@ -40,20 +40,24 @@
 # error "To have gmrender any useful, you need to have libupnp installed."
 #endif
 
-#include <upnp/ithread.h>
+//#include <upnp/ithread.h>
+#include <pthread.h>
 
 // For version strings of upnp and gstreamer
-#include <upnp/upnpconfig.h>
+//#include <upnp/upnpconfig.h>
+#include <upnpconfig.h>
 #include <gst/gst.h>
 
 #include "git-version.h"
 #include "logging.h"
 #include "output.h"
 #include "upnp.h"
+//#include "upnp_service.h" // New
 #include "upnp_control.h"
 #include "upnp_device.h"
 #include "upnp_renderer.h"
 #include "upnp_transport.h"
+//#include "upnp_connmgr.h" // New
 #include "oh_playlist.h"
 #include "oh_info.h"
 #include "oh_time.h"
@@ -77,6 +81,7 @@ static gchar *playlist_file = NULL;
 // Apparently they just use this for the advertisement ? Anyway, 0.0.0.0 would
 // not work.
 static const gchar *ip_address = NULL;
+static const gchar *interface_name = NULL;
 static int listen_port = 49494;
 
 #ifdef GMRENDER_UUID
@@ -98,9 +103,11 @@ static GOptionEntry option_entries[] = {
 	  "Device mode (upnpav or openhome, defaults to upnpav)", NULL },
 	{ "playlist", 0, 0, G_OPTION_ARG_STRING, &playlist_file,
 	  "Filename to store playlist in OpenHome mode", NULL },
-	{ "ip-address", 'I', 0, G_OPTION_ARG_STRING, &ip_address,
+	{ "interface-name", 'I', 0, G_OPTION_ARG_STRING, &interface_name,
+	  "The local interface name the service is running and advertised", NULL },
+	/*{ "ip-address", 'I', 0, G_OPTION_ARG_STRING, &ip_address,
 	  "The local IP address the service is running and advertised "
-	  "(only one, 0.0.0.0 won't work)", NULL },
+	  "(only one, 0.0.0.0 won't work)", NULL },*/
 	// The following is not very reliable, as libupnp does not set
 	// SO_REUSEADDR by default, so it might increment (sending patch).
 	{ "port", 'p', 0, G_OPTION_ARG_INT, &listen_port,
@@ -288,7 +295,8 @@ int main(int argc, char **argv)
 			  listen_port);
 		return EXIT_FAILURE;
 	}
-	device = upnp_device_init(device_desc, ip_address, listen_port);
+	//device = upnp_device_init(device_desc, ip_address, listen_port);
+	device = upnp_device_init(device_desc, interface_name, listen_port);
 	if (device == NULL) {
 		Log_error("main", "ERROR: Failed to initialize UPnP device");
 		return EXIT_FAILURE;

@@ -39,7 +39,8 @@
 #include <arpa/inet.h>
 
 #include <upnp/upnp.h>
-#include <upnp/ithread.h>
+//#include <upnp/ithread.h>
+#include <pthread.h> // New
 #include <upnp/upnptools.h>
 
 #include "logging.h"
@@ -56,7 +57,8 @@
 
 struct upnp_device {
 	struct upnp_device_descriptor *upnp_device_descriptor;
-	ithread_mutex_t device_mutex;
+	//ithread_mutex_t device_mutex;
+	pthread_mutex_t device_mutex; // New
         UpnpDevice_Handle device_handle;
 };
 
