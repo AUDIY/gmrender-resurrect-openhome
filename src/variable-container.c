@@ -37,9 +37,13 @@
 #include "xmldoc.h"
 
 
-static ithread_t notify_thread;
-static ithread_mutex_t  notify_mutex;
-static ithread_cond_t  notify_cond;
+//static ithread_t notify_thread;
+static pthread_t notify_thread;
+//static ithread_mutex_t  notify_mutex;
+static pthread_mutex_t  notify_mutex;
+//static ithread_cond_t  notify_cond;
+static pthread_cond_t  notify_cond;
+
 static int send_notifications = 0;
 static upnp_var_change_collector_t *collectors = NULL;
 
